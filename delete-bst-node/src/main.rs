@@ -28,7 +28,7 @@ fn string_to_treenode(input: &str) -> Rc<TreeNode> {
     queue.push_back(Rc::clone(&root));
 
     while !queue.is_empty() {
-        let node = queue.pop_back().unwrap();
+        let node = queue.pop_front().unwrap();
 
         match input.next() {
             Some("null") => {}
