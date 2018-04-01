@@ -86,11 +86,35 @@ impl TreeNode {
 
         return format!("[{}]", output.trim_right_matches(", "));
     }
+
+    fn find<'a>(parent: &'a Option<Box<TreeNode>>, root: &'a Option<Box<TreeNode>>, key: u32)
+        -> (&'a Option<Box<TreeNode>>, &'a Option<Box<TreeNode>>) {
+        match *root {
+            None => (&None, &None),
+            Some(ref the_root) => {
+                if key < the_root.val {
+                    return TreeNode::find(root, &the_root.left, key);
+                }
+                if key > the_root.val {
+                    return TreeNode::find(root, &the_root.right, key);
+                }
+                return (root, parent);
+            }
+        }
+    }
+
+    fn delete_node(tree: &mut TreeNode, key: u32) {
+
+    }
 }
 
 fn main() {
     assert_eq!(TreeNode::tree_to_string(TreeNode::from("[5, 4, 6, 2, null, null, 7, null, null, null, null]")),
                "[5, 4, 6, 2, null, null, 7, null, null, null, null]");
     assert_eq!(TreeNode::tree_to_string(TreeNode::from("[1, null, 2, null, null]")), "[1, null, 2, null, null]");
-    assert_eq!(TreeNode::tree_to_string(TreeNode::from("[0, null, null]")), "[0, null, null]")
+    assert_eq!(TreeNode::tree_to_string(TreeNode::from("[0, null, null]")), "[0, null, null]");
+    let tree = TreeNode::from("[5, 4, 6, 2, null, null, 7, null, null, null, null]");
+    let some_tree = Some(tree);
+    let ret = TreeNode::find(&None, &some_tree, 7);
+    println!("{:?}", ret);
 }
