@@ -1,77 +1,83 @@
 use std::collections::VecDeque;
-use std::rc::Rc;
-use std::cell::RefCell;
 
 #[derive(Debug)]
 struct TreeNode {
     val: u32,
-    left: RefCell<Option<Rc<TreeNode>>>,
-    right: RefCell<Option<Rc<TreeNode>>>,
+    left: Option<Box<TreeNode>>,
+    right: Option<Box<TreeNode>>,
 }
 
 impl TreeNode {
     fn new(val: u32) -> TreeNode {
-        TreeNode { val, left: RefCell::new(None), right: RefCell::new(None) }
+        TreeNode { val, left: None, right: None }
     }
 
-    fn from(input: &str) -> Rc<TreeNode> {
+    fn from(input: &str) -> Box<TreeNode> {
         let mut input = input.trim().trim_left_matches('[').trim_right_matches(']').split(',');
 
         let root = match input.next() {
-            Some(val) => Rc::new(TreeNode::new(val.parse().unwrap())),
+            Some(val) => Box::new(TreeNode::new(val.parse().unwrap())),
             None => panic!("no first value")
         };
 
-        let mut queue: VecDeque<Rc<TreeNode>> = VecDeque::new();
-        queue.push_back(Rc::clone(&root));
+        {
+            let mut queue: VecDeque<&TreeNode> = VecDeque::new();
+            queue.push_back(&*root);
 
-        while !queue.is_empty() {
-            let node = queue.pop_front().unwrap();
+            while !queue.is_empty() {
+                let node = queue.pop_front().unwrap();
 
-            match input.next() {
-                Some(val) => {
-                    match val.trim() {
-                        "null" => {}
-                        val => {
-                            let left = Rc::new(TreeNode::new(val.parse().unwrap()));
-                            queue.push_back(left.clone());
-                            *node.left.borrow_mut() = Some(left);
+                match input.next() {
+                    Some(val) => {
+                        match val.trim() {
+                            "null" => {}
+                            val => {
+                                let left = Box::new(TreeNode::new(val.parse().unwrap()));
+                                unsafe { *(&node.left as *const Option<Box<TreeNode>> as *mut Option<Box<TreeNode>>) = Some(left); }
+                                queue.push_back(node.left.as_ref().unwrap());
+                            }
                         }
                     }
+                    None => break
                 }
-                None => break
-            }
 
-            match input.next() {
-                Some(val) => {
-                    match val.trim() {
-                        "null" => {}
-                        val => {
-                            let right = Rc::new(TreeNode::new(val.parse().unwrap()));
-                            queue.push_back(right.clone());
-                            *node.right.borrow_mut() = Some(right);
+                match input.next() {
+                    Some(val) => {
+                        match val.trim() {
+                            "null" => {}
+                            val => {
+                                let right = Box::new(TreeNode::new(val.parse().unwrap()));
+                                unsafe { *(&node.right as *const Option<Box<TreeNode>> as *mut Option<Box<TreeNode>>) = Some(right); }
+                                queue.push_back(node.right.as_ref().unwrap());
+                            }
                         }
                     }
+                    None => panic!("missing value")
                 }
-                None => panic!("missing value")
             }
         }
 
         return root;
     }
 
-    fn tree_to_string(tree: Rc<TreeNode>) -> String {
+    fn tree_to_string(tree: Box<TreeNode>) -> String {
         let mut output = String::new();
 
-        let mut queue: VecDeque<Option<Rc<TreeNode>>> = VecDeque::new();
-        queue.push_back(Some(tree.clone()));
+        let mut queue: VecDeque<Option<&TreeNode>> = VecDeque::new();
+        queue.push_back(Some(&*tree));
 
         while !queue.is_empty() {
             match queue.pop_front().unwrap() {
                 Some(val) => {
                     output.push_str(&val.val.to_string());
-                    queue.push_back(val.left.borrow().clone());
-                    queue.push_back(val.right.borrow().clone());
+                    queue.push_back(match val.left {
+                        Some(ref val) => Some(&**val),
+                        None => None
+                    });
+                    queue.push_back(match val.right {
+                        Some(ref val) => Some(&**val),
+                        None => None
+                    });
                 }
                 None => { output.push_str("null") }
             }
