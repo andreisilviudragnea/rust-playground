@@ -12,17 +12,18 @@ impl TreeNode {
         TreeNode { val, left: None, right: None }
     }
 
-    fn from(input: &str) -> Box<TreeNode> {
+    fn from(input: &str) -> Option<Box<TreeNode>> {
         let mut input = input.trim().trim_left_matches('[').trim_right_matches(']').split(',');
 
         let mut root = match input.next() {
-            Some(val) => Box::new(TreeNode::new(val.parse().unwrap())),
+            Some(val) => Some(Box::new(TreeNode::new(val.parse().unwrap()))),
             None => panic!("no first value")
         };
 
         {
             let mut queue: VecDeque<&mut TreeNode> = VecDeque::new();
-            queue.push_back(&mut *root);
+            let r = root.as_mut().unwrap();
+            queue.push_back(r);
 
             while !queue.is_empty() {
                 let node = queue.pop_front().unwrap();
@@ -58,24 +59,18 @@ impl TreeNode {
         return root;
     }
 
-    fn tree_to_string(tree: Box<TreeNode>) -> String {
+    fn tree_to_string(tree: &Option<Box<TreeNode>>) -> String {
         let mut output = String::new();
 
-        let mut queue: VecDeque<Option<&TreeNode>> = VecDeque::new();
-        queue.push_back(Some(&*tree));
+        let mut queue: VecDeque<&Option<Box<TreeNode>>> = VecDeque::new();
+        queue.push_back(tree);
 
         while !queue.is_empty() {
-            match queue.pop_front().unwrap() {
-                Some(val) => {
+            match *queue.pop_front().unwrap() {
+                Some(ref val) => {
                     output.push_str(&val.val.to_string());
-                    queue.push_back(match val.left {
-                        Some(ref val) => Some(&**val),
-                        None => None
-                    });
-                    queue.push_back(match val.right {
-                        Some(ref val) => Some(&**val),
-                        None => None
-                    });
+                    queue.push_back(&val.left);
+                    queue.push_back(&val.right);
                 }
                 None => { output.push_str("null") }
             }
@@ -100,12 +95,11 @@ impl TreeNode {
 }
 
 fn main() {
-    assert_eq!(TreeNode::tree_to_string(TreeNode::from("[5, 4, 6, 2, null, null, 7, null, null, null, null]")),
+    assert_eq!(TreeNode::tree_to_string(&TreeNode::from("[5, 4, 6, 2, null, null, 7, null, null, null, null]")),
                "[5, 4, 6, 2, null, null, 7, null, null, null, null]");
-    assert_eq!(TreeNode::tree_to_string(TreeNode::from("[1, null, 2, null, null]")), "[1, null, 2, null, null]");
-    assert_eq!(TreeNode::tree_to_string(TreeNode::from("[0, null, null]")), "[0, null, null]");
+    assert_eq!(TreeNode::tree_to_string(&TreeNode::from("[1, null, 2, null, null]")), "[1, null, 2, null, null]");
+    assert_eq!(TreeNode::tree_to_string(&TreeNode::from("[0, null, null]")), "[0, null, null]");
     let tree = TreeNode::from("[5, 4, 6, 2, null, null, 7, null, null, null, null]");
-    let some_tree = Some(tree);
-    let ret = TreeNode::find(&None, &some_tree, 7);
+    let ret = TreeNode::find(&None, &tree, 7);
     println!("{:?}", ret);
 }
