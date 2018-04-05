@@ -90,10 +90,10 @@ impl Robot {
 }
 
 fn main() {
-    let mut input = BufReader::new(File::open(INPUT_FILE).unwrap());
+    let input = BufReader::new(File::open(INPUT_FILE).unwrap());
     let mut output = BufWriter::new(OpenOptions::new().create(true).truncate(true).write(true).open(OUTPUT_FILE).unwrap());
-    let mut line = String::new();
-    input.read_line(&mut line).unwrap();
+    let mut lines = input.lines();
+    let line = lines.next().unwrap().unwrap();
     let n: usize;
     let lin: usize;
     let col: usize;
@@ -105,7 +105,7 @@ fn main() {
     }
     let mut map: Vec<Vec<usize>> = vec![vec![0; col]; lin];
     for i in 0..lin {
-        input.read_line(&mut line).unwrap();
+        let line = lines.next().unwrap().unwrap();
         let mut tokens = line.split_whitespace();
         for j in 0..col {
             map[i][j] = next(&mut tokens);
@@ -115,7 +115,7 @@ fn main() {
     let mut executed_commands: Vec<Command> = Vec::new();
     let mut all_executed_commands: Vec<ExecutedCommand> = Vec::new();
 
-    for line in input.lines() {
+    for line in lines {
         let line = line.unwrap();
         let mut tokens = line.split_whitespace();
         match tokens.next() {
@@ -193,7 +193,7 @@ fn main() {
             }
             Some(UNDO) => {
                 match all_executed_commands.len() {
-                    0 => writeln!(output, "No history").unwrap(),
+                    0 => writeln!(output, "{}: No history", UNDO).unwrap(),
                     _ => match all_executed_commands.pop().unwrap() {
                         ExecutedCommand::Command(command) => {
                             match command.priority {
