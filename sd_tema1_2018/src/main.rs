@@ -43,7 +43,7 @@ struct Command {
     y: usize,
     num_boxes: usize,
     priority: usize,
-    time: usize
+    time: usize,
 }
 
 enum ExecutedCommand {
@@ -128,7 +128,7 @@ fn main() {
                     y: next(&mut tokens),
                     num_boxes: next(&mut tokens),
                     priority: next(&mut tokens),
-                    time: 0
+                    time: 0,
                 };
                 robots[robot_id].add_command(command.clone());
                 all_executed_commands.push(ExecutedCommand::Command(command))
@@ -142,7 +142,7 @@ fn main() {
                     y: next(&mut tokens),
                     num_boxes: next(&mut tokens),
                     priority: next(&mut tokens),
-                    time: 0
+                    time: 0,
                 };
                 robots[robot_id].add_command(command.clone());
                 all_executed_commands.push(ExecutedCommand::Command(command))
@@ -178,7 +178,7 @@ fn main() {
                 let commands = &robots[robot_id].commands;
                 writeln!(output, "{}: {}", PRINT_COMMANDS, match commands.len() {
                     0 => "No command found".to_string(),
-                    _ => format!("{}: {}", robot_id, commands.iter().map(|command| command.to_string())
+                    _ => format!("{}: {}", robot_id, commands.iter().map(Command::to_string)
                         .collect::<Vec<String>>().join("; "))
                 }).unwrap();
             }
@@ -228,10 +228,7 @@ fn main() {
             Some(HOW_MUCH_TIME) => {
                 writeln!(output, "{}: {}", HOW_MUCH_TIME, match executed_commands.len() {
                     0 => "No command was executed".to_string(),
-                    _ => {
-                        let last_executed_command = executed_commands.last().unwrap();
-                        last_executed_command.time.to_string()
-                    }
+                    _ => executed_commands.last().unwrap().time.to_string()
                 }).unwrap();
             }
             _ => {}
